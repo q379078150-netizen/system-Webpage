@@ -13,6 +13,13 @@ let adminToken = localStorage.getItem('ADMIN_TOKEN') || '';
 // 展示用时区，确保时间显示与本地一致（中国大陆用 Asia/Shanghai）
 const DISPLAY_TIME_ZONE = 'Asia/Shanghai';
 
+// 将后端返回的 UTC 时间字符串（例如 2026-01-19T08:59:16）解析为 Date
+function parseUTC(dateString) {
+    if (!dateString) return null;
+    // 在末尾补 Z，明确按 UTC 解析
+    return new Date(`${dateString}Z`);
+}
+
 function getAuthHeaders() {
     const headers = { 'Content-Type': 'application/json' };
     if (adminToken) headers['X-Admin-Token'] = adminToken;
@@ -619,7 +626,7 @@ function getStatusText(status) {
 function getTimeAgo(dateString) {
     if (!dateString) return '未知';
     
-    const date = new Date(dateString);
+    const date = parseUTC(dateString) || new Date(dateString);
     const now = new Date();
     const diff = now - date;
     
@@ -637,7 +644,7 @@ function getTimeAgo(dateString) {
 // 判断是否为新情报（1小时内）
 function isNew(dateString) {
     if (!dateString) return false;
-    const date = new Date(dateString);
+    const date = parseUTC(dateString) || new Date(dateString);
     const now = new Date();
     const diff = now - date;
     return diff < 3600000; // 1小时
@@ -645,7 +652,8 @@ function isNew(dateString) {
 
 function formatDateTime(dateString) {
     if (!dateString) return '未知';
-    const date = new Date(dateString);
+    const parsed = parseUTC(dateString);
+    const date = parsed || new Date(dateString);
     return date.toLocaleString('zh-CN', { hour12: false, timeZone: DISPLAY_TIME_ZONE });
 }
 // 更新主要文章
