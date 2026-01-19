@@ -55,27 +55,25 @@ function displayIntelligence(intelligenceList) {
     const loadMoreContainer = document.getElementById('loadMoreContainer');
     
     if (intelligenceList.length === 0) {
-        container.innerHTML = '';
-        emptyState.style.display = 'block';
-        loadMoreContainer.style.display = 'none';
+        if (container) container.innerHTML = '';
+        if (emptyState) emptyState.style.display = 'block';
+        if (loadMoreContainer) loadMoreContainer.style.display = 'none';
         return;
     }
     
-    emptyState.style.display = 'none';
+    if (emptyState) emptyState.style.display = 'none';
     
     // 根据当前视图显示
     const viewClass = currentView === 'grid' ? 'grid-view' : 'timeline-view';
-    container.className = `intelligence-list ${viewClass}`;
+    if (container) container.className = `intelligence-list ${viewClass}`;
     
     // 限制显示数量
     const displayList = intelligenceList.slice(0, displayedCount);
-    container.innerHTML = displayList.map(item => createIntelligenceCard(item)).join('');
+    if (container) container.innerHTML = displayList.map(item => createIntelligenceCard(item)).join('');
     
     // 显示加载更多按钮
-    if (intelligenceList.length > displayedCount) {
-        loadMoreContainer.style.display = 'block';
-    } else {
-        loadMoreContainer.style.display = 'none';
+    if (loadMoreContainer) {
+        loadMoreContainer.style.display = intelligenceList.length > displayedCount ? 'block' : 'none';
     }
     
     // 更新快讯流
@@ -116,6 +114,12 @@ function createIntelligenceCard(item) {
     if (isNew(item.created_at)) tags.push('<span class="tag new">最新</span>');
     if (rating === 5) tags.push('<span class="tag urgent">紧急</span>');
     
+    const statusBadge = item.status && item.status !== 'pending' ? `
+        <span class="meta-item">
+            <i class="fas fa-circle"></i>
+            <span class="status-badge ${statusClass}">${getStatusText(item.status)}</span>
+        </span>` : '';
+
     return `
         <div class="intelligence-card ${ratingClass} ${itemClass}">
             <div class="card-header">
@@ -129,10 +133,7 @@ function createIntelligenceCard(item) {
                             <i class="fas fa-star"></i>
                             <span class="rating-badge ${ratingClass}">${stars} ${rating}星</span>
                         </span>
-                        <span class="meta-item">
-                            <i class="fas fa-circle"></i>
-                            <span class="status-badge ${statusClass}">${getStatusText(item.status)}</span>
-                        </span>
+                        ${statusBadge}
                         <span class="meta-item">
                             <i class="fas fa-clock"></i>
                     ${timeAgo} · ${createdDate}
