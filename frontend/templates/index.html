@@ -26,12 +26,17 @@
                 <button class="btn-icon-header" id="adminBtn" onclick="toggleAdmin()" title="管理员：登录/退出">
                     <i class="fas fa-user-shield"></i>
                 </button>
-                <button class="btn-icon-header" onclick="showCreateModal()" title="创建情报">
+                <button class="btn-icon-header" id="createBtn" onclick="showCreateModal()" title="创建情报">
                     <i class="fas fa-plus"></i>
                 </button>
             </div>
         </div>
     </header>
+
+    <!-- 全局加载提示 -->
+    <div id="loadingSpinner" class="loading-spinner" style="display:none; position: fixed; top: 14px; right: 14px; z-index: 2000;">
+        <i class="fas fa-spinner fa-spin"></i> 加载中...
+    </div>
 
     <div class="main-container">
         <!-- 左侧栏 -->

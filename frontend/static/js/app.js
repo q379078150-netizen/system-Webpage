@@ -11,6 +11,12 @@ let displayedCount = 20;
 let tickerInterval = null;
 let adminToken = localStorage.getItem('ADMIN_TOKEN') || '';
 
+function getAuthHeaders() {
+    const headers = { 'Content-Type': 'application/json' };
+    if (adminToken) headers['X-Admin-Token'] = adminToken;
+    return headers;
+}
+
 // 页面加载时初始化
 document.addEventListener('DOMContentLoaded', function() {
     loadIntelligence();
@@ -100,7 +106,7 @@ function createIntelligenceCard(item) {
     const stars = '⭐'.repeat(rating);
     const ratingClass = `rating-${rating}`;
     const statusClass = item.status || 'pending';
-    const createdDate = item.created_at ? new Date(item.created_at).toLocaleString('zh-CN') : '未知';
+    const createdDate = formatDateTime(item.created_at);
     const timeAgo = getTimeAgo(item.created_at);
     const itemClass = currentView === 'timeline' ? 'timeline-item' : 'grid-item';
     
@@ -129,7 +135,7 @@ function createIntelligenceCard(item) {
                         </span>
                         <span class="meta-item">
                             <i class="fas fa-clock"></i>
-                            ${timeAgo}
+                    ${timeAgo} · ${createdDate}
                         </span>
                         ${item.source ? `
                         <span class="meta-item">
@@ -144,18 +150,18 @@ function createIntelligenceCard(item) {
                 ${escapeHtml(item.content.substring(0, 200))}${item.content.length > 200 ? '...' : ''}
             </div>
             <div class="card-actions">
-                ${item.status !== 'published' ? `
+                ${adminToken && item.status !== 'published' ? `
                 <button class="btn btn-success btn-sm" onclick="pushIntelligence(${item.id})">
                     <i class="fas fa-paper-plane"></i> 推送
                 </button>
                 ` : ''}
+                ${adminToken ? `
                 <button class="btn btn-primary btn-sm" onclick="editIntelligence(${item.id})">
                     <i class="fas fa-edit"></i> 编辑
                 </button>
                 <button class="btn btn-secondary btn-sm" onclick="classifyIntelligence(${item.id})">
                     <i class="fas fa-star"></i> 分级
                 </button>
-                ${adminToken ? `
                 <button class="btn btn-danger btn-sm" onclick="deleteIntelligence(${item.id})">
                     <i class="fas fa-trash"></i> 删除
                 </button>
@@ -173,7 +179,7 @@ function toggleAdmin() {
         localStorage.removeItem('ADMIN_TOKEN');
         showNotification('已退出管理员模式', 'info');
         updateAdminUI();
-        filterIntelligence();
+        loadIntelligence(); // 退出管理员后重新拉取数据，确保列表同步
         return;
     }
 
@@ -183,14 +189,18 @@ function toggleAdmin() {
     localStorage.setItem('ADMIN_TOKEN', adminToken);
     showNotification('已进入管理员模式', 'success');
     updateAdminUI();
-    filterIntelligence();
+    loadIntelligence(); // 切换为管理员后刷新数据
 }
 
 function updateAdminUI() {
     const btn = document.getElementById('adminBtn');
+    const createBtn = document.getElementById('createBtn');
     if (!btn) return;
     btn.classList.toggle('active', !!adminToken);
     btn.title = adminToken ? '管理员：已登录（点击退出）' : '管理员：登录';
+    if (createBtn) {
+        createBtn.style.display = adminToken ? 'flex' : 'none';
+    }
 }
 
 // 删除情报（仅管理员）
@@ -204,9 +214,7 @@ async function deleteIntelligence(id) {
     try {
         const response = await fetch(`${API_BASE}/intelligence/${id}`, {
             method: 'DELETE',
-            headers: {
-                'X-Admin-Token': adminToken
-            }
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {
@@ -243,9 +251,13 @@ function updateStatistics() {
 
 // 筛选情报
 function filterIntelligence() {
-    const ratingFilter = document.getElementById('ratingFilter').value;
-    const statusFilter = document.getElementById('statusFilter').value;
-    const searchText = document.getElementById('searchInput').value.toLowerCase();
+    const ratingFilterEl = document.getElementById('ratingFilter');
+    const statusFilterEl = document.getElementById('statusFilter');
+    const searchInputEl = document.getElementById('searchInput');
+
+    const ratingFilter = ratingFilterEl ? ratingFilterEl.value : '';
+    const statusFilter = statusFilterEl ? statusFilterEl.value : '';
+    const searchText = (searchInputEl ? searchInputEl.value : '').toLowerCase();
     
     let filtered = [...allIntelligence];
     
@@ -404,6 +416,10 @@ function stopTicker() {
 
 // 显示创建模态框
 function showCreateModal() {
+    if (!adminToken) {
+        showNotification('仅管理员可创建情报', 'error');
+        return;
+    }
     currentEditingId = null;
     document.getElementById('modalTitle').textContent = '创建新情报';
     document.getElementById('intelligenceForm').reset();
@@ -433,6 +449,10 @@ async function editIntelligence(id) {
 
 // 分级情报
 async function classifyIntelligence(id) {
+    if (!adminToken) {
+        showNotification('仅管理员可分级', 'error');
+        return;
+    }
     const rating = prompt('请输入评级 (1-5):');
     if (!rating || rating < 1 || rating > 5) {
         showNotification('评级必须是1-5之间的数字', 'error');
@@ -442,9 +462,7 @@ async function classifyIntelligence(id) {
     try {
         const response = await fetch(`${API_BASE}/intelligence/${id}/classify`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify({ rating: parseInt(rating) })
         });
         
@@ -462,11 +480,16 @@ async function classifyIntelligence(id) {
 
 // 推送情报
 async function pushIntelligence(id) {
+    if (!adminToken) {
+        showNotification('仅管理员可推送', 'error');
+        return;
+    }
     if (!confirm('确定要推送这条情报吗？')) return;
     
     try {
         const response = await fetch(`${API_BASE}/push/${id}`, {
-            method: 'POST'
+            method: 'POST',
+            headers: getAuthHeaders()
         });
         
         if (response.ok) {
@@ -487,6 +510,11 @@ function setupFormSubmit() {
     document.getElementById('intelligenceForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
+        if (!adminToken) {
+            showNotification('仅管理员可创建/编辑', 'error');
+            return;
+        }
+        
         const data = {
             title: document.getElementById('intelligenceTitle').value,
             content: document.getElementById('intelligenceContent').value,
@@ -501,18 +529,14 @@ function setupFormSubmit() {
                 // 更新
                 response = await fetch(`${API_BASE}/intelligence/${currentEditingId}`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify(data)
                 });
             } else {
                 // 创建
                 response = await fetch(`${API_BASE}/intelligence`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify(data)
                 });
             }
@@ -556,7 +580,9 @@ function refreshData() {
 
 // 显示/隐藏加载动画
 function showLoading(show) {
-    document.getElementById('loadingSpinner').style.display = show ? 'block' : 'none';
+    const spinner = document.getElementById('loadingSpinner');
+    if (!spinner) return;
+    spinner.style.display = show ? 'block' : 'none';
 }
 
 // 显示通知
@@ -614,6 +640,11 @@ function isNew(dateString) {
     return diff < 3600000; // 1小时
 }
 
+function formatDateTime(dateString) {
+    if (!dateString) return '未知';
+    const date = new Date(dateString);
+    return date.toLocaleString('zh-CN', { hour12: false });
+}
 // 更新主要文章
 function updateFeaturedArticle(intelligenceList) {
     const featuredContainer = document.getElementById('featuredArticle');
@@ -734,6 +765,10 @@ function updateRightNewsList(newsItems) {
 
 // 查看情报详情
 function viewIntelligence(id) {
+    if (!adminToken) {
+        showNotification('仅管理员可查看/编辑详情', 'info');
+        return;
+    }
     const item = allIntelligence.find(i => i.id === id);
     if (item) {
         editIntelligence(id);
