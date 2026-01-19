@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>情报推送系统 - Intelligence Push System | The Block Beats Style</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <header class="top-header">
+        <div class="header-container">
+            <div class="nav-links">
+                <a href="#" class="nav-link active">首页</a>
+                <a href="#" class="nav-link">快讯</a>
+                <a href="#" class="nav-link">深度</a>
+                <a href="#" class="nav-link">数据</a>
+                <a href="#" class="nav-link">更多 <i class="fas fa-chevron-down"></i></a>
+            </div>
+            <div class="header-right">
+                <div class="search-box-header">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="请输入搜索内容" id="headerSearch">
+                </div>
+                <button class="btn-icon-header" onclick="showCreateModal()" title="创建情报">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- 左侧栏 -->
+        <aside class="sidebar-left">
+            <!-- 统计图表区域 -->
+            <section class="chart-section">
+                <div class="section-title">
+                    <h3>合规交易所总资产</h3>
+                </div>
+                <div class="chart-placeholder">
+                    <canvas id="assetChart"></canvas>
+                    <div class="chart-legend">
+                        <span class="legend-item">
+                            <span class="legend-color" style="background: var(--accent-color);"></span>
+                            总资产
+                        </span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 全网热搜 -->
+            <section class="trending-section">
+                <div class="section-title">
+                    <h3>全网热搜</h3>
+                </div>
+                <div class="trending-list" id="trendingList">
+                    <div class="trending-item">
+                        <i class="fab fa-ethereum"></i>
+                        <span>SOL</span>
+                        <span class="trending-tag">meme</span>
+                    </div>
+                    <div class="trending-item">
+                        <i class="fab fa-ethereum"></i>
+                        <span>ETH</span>
+                        <span class="trending-tag">meme</span>
+                    </div>
+                    <div class="trending-item">
+                        <i class="fas fa-coins"></i>
+                        <span>Base</span>
+                        <span class="trending-tag">meme</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 币种列表 -->
+            <section class="crypto-list-section">
+                <div class="crypto-item">
+                    <div class="crypto-icon" style="background: linear-gradient(135deg, #ff9800, #f57c00);">XMR</div>
+                    <div class="crypto-info">
+                        <div class="crypto-name">XMR</div>
+                        <div class="crypto-category">Privacy</div>
+                    </div>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+                <div class="crypto-item">
+                    <div class="crypto-icon" style="background: linear-gradient(135deg, var(--up-color), #00cc6f);">KAITO</div>
+                    <div class="crypto-info">
+                        <div class="crypto-name">KAITO</div>
+                        <div class="crypto-category">InfoFi</div>
+                    </div>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+                <div class="crypto-item">
+                    <div class="crypto-icon" style="background: linear-gradient(135deg, #ffd700, #ffb300);">BTC</div>
+                    <div class="crypto-info">
+                        <div class="crypto-name">BTC</div>
+                        <div class="crypto-category">PoW</div>
+                    </div>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+                <div class="crypto-item">
+                    <div class="crypto-icon" style="background: linear-gradient(135deg, #1e88e5, #1565c0);">DASH</div>
+                    <div class="crypto-info">
+                        <div class="crypto-name">DASH</div>
+                        <div class="crypto-category">Privacy</div>
+                    </div>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+                <div class="crypto-item">
+                    <div class="crypto-icon" style="background: linear-gradient(135deg, #9c27b0, #7b1fa2);">ETH</div>
+                    <div class="crypto-info">
+                        <div class="crypto-name">ETH</div>
+                        <div class="crypto-category">L1</div>
+                    </div>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </section>
+        </aside>
+
+        <!-- 中间主内容区 -->
+        <main class="main-content">
+            <!-- 统计卡片 -->
+            <section class="stats-section">
+                <div class="stats-grid">
+                    <div class="stat-card stat-card-primary">
+                        <div class="stat-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalCount">0</h3>
+                            <p>总情报数</p>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-card-success">
+                        <div class="stat-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="highRatingCount">0</h3>
+                            <p>高价值情报 (4-5星)</p>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-card-warning">
+                        <div class="stat-icon">
+                            <i class="fas fa-paper-plane"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="publishedCount">0</h3>
+                            <p>已推送</p>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-card-info">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="pendingCount">0</h3>
+                            <p>待处理</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 主要新闻文章 -->
+            <section class="featured-articles">
+                <div class="article-card featured" id="featuredArticle">
+                    <!-- 主要文章将在这里动态加载 -->
+                </div>
+            </section>
+
+            <!-- 最新快讯 -->
+            <section class="latest-news-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-bolt"></i> 最新快讯</h2>
+                    <a href="#" class="more-link">更多 <i class="fas fa-chevron-right"></i></a>
+                </div>
+                <div id="latestNewsList" class="news-list">
+                    <!-- 快讯列表将在这里动态加载 -->
+                </div>
+            </section>
+
+            <!-- 情报列表 -->
+            <section class="intelligence-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-list"></i> 情报列表</h2>
+                    <div class="view-switcher">
+                        <select id="sortSelect" onchange="sortIntelligence()">
+                            <option value="time">按时间</option>
+                            <option value="rating">按评级</option>
+                            <option value="hot">按热度</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="intelligenceList" class="intelligence-list">
+                    <!-- 情报卡片将在这里动态加载 -->
+                </div>
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <i class="fas fa-inbox"></i>
+                    <p>暂无情报数据</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- 右侧栏 -->
+        <aside class="sidebar-right">
+            <!-- 链上监控 -->
+            <section class="chain-monitor-section">
+                <div class="section-title">
+                    <i class="fas fa-search"></i>
+                    <h3>链上侦探持续监控</h3>
+                </div>
+                <div id="chainMonitorList" class="monitor-list">
+                    <!-- 监控信息将在这里动态加载 -->
+                </div>
+            </section>
+
+            <!-- 热门情报 -->
+            <section class="hot-intelligence-section">
+                <div class="section-title">
+                    <h3><i class="fas fa-fire"></i> 热门情报</h3>
+                </div>
+                <div id="hotIntelligenceList" class="hot-list">
+                    <!-- 热门情报将在这里动态加载 -->
+                </div>
+            </section>
+
+            <!-- 融资动向 -->
+            <section class="funding-section">
+                <div class="section-title">
+                    <h3><i class="fas fa-chart-line"></i> 融资动向</h3>
+                    <a href="#" class="more-link">更多 <i class="fas fa-chevron-right"></i></a>
+                </div>
+                <div id="fundingList" class="funding-list">
+                    <!-- 融资信息将在这里动态加载 -->
+                </div>
+            </section>
+
+            <!-- 最新快讯（右侧） -->
+            <section class="right-news-section">
+                <div class="section-header">
+                    <h3>最新快讯</h3>
+                    <a href="#" class="more-link">更多 <i class="fas fa-chevron-right"></i></a>
+                </div>
+                <div id="rightNewsList" class="news-list-compact">
+                    <!-- 快讯列表将在这里动态加载 -->
+                </div>
+            </section>
+        </aside>
+    </div>
+
+    <!-- 创建/编辑情报模态框 -->
+    <div id="createModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">创建新情报</h2>
+                <button class="modal-close" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="intelligenceForm">
+                    <div class="form-group">
+                        <label>标题 <span class="required">*</span></label>
+                        <input type="text" id="intelligenceTitle" required placeholder="请输入情报标题">
+                    </div>
+                    <div class="form-group">
+                        <label>内容 <span class="required">*</span></label>
+                        <textarea id="intelligenceContent" rows="6" required placeholder="请输入情报内容"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>来源</label>
+                            <input type="text" id="intelligenceSource" placeholder="情报来源（可选）">
+                        </div>
+                        <div class="form-group">
+                            <label>评级</label>
+                            <select id="intelligenceRating">
+                                <option value="">自动评级</option>
+                                <option value="5">5星 - 极高价值</option>
+                                <option value="4">4星 - 高价值</option>
+                                <option value="3">3星 - 中等价值</option>
+                                <option value="2">2星 - 低价值</option>
+                                <option value="1">1星 - 无效</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知提示 -->
+    <div id="notification" class="notification"></div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
