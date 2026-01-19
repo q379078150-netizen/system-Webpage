@@ -448,8 +448,24 @@ function setupFormSubmit() {
             }
             
             if (response.ok) {
+                const saved = await response.json();
+
+                // 本地即时更新，避免等待下一次请求才显示
+                if (currentEditingId) {
+                    allIntelligence = allIntelligence.map(item =>
+                        item.id === currentEditingId ? saved : item
+                    );
+                } else {
+                    allIntelligence.unshift(saved);
+                }
+
+                updateStatistics();
+                displayIntelligence(allIntelligence);
+
                 showNotification(currentEditingId ? '更新成功' : '创建成功', 'success');
                 closeModal();
+                
+                // 再拉一次后端数据，确保与服务器完全一致
                 loadIntelligence();
             } else {
                 const error = await response.json();
