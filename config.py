@@ -43,3 +43,7 @@ class Config:
     LOG_DIR = os.path.join(os.path.dirname(__file__), 'logs')
     LOG_FILE = os.path.join(LOG_DIR, 'app.log')
     LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
+
+    # 管理员操作（用于删除等敏感操作）
+    # 建议在 .env 中配置一个强随机值，例如：ADMIN_TOKEN=your-long-random-token
+    ADMIN_TOKEN = os.environ.get('ADMIN_TOKEN', '')

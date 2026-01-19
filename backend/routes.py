@@ -14,6 +14,16 @@ logger = logging.getLogger(__name__)
 
 def register_routes(app: Flask):
     """注册所有路由"""
+
+    def _require_admin():
+        """管理员鉴权：通过 X-Admin-Token 或 ?admin_token= 校验"""
+        configured = (app.config.get('ADMIN_TOKEN') or '').strip()
+        provided = (request.headers.get('X-Admin-Token') or request.args.get('admin_token') or '').strip()
+
+        # 未配置 ADMIN_TOKEN 时，拒绝管理员操作（避免误开）
+        if not configured:
+            return False
+        return provided == configured
     
     @app.route('/', methods=['GET'])
     def index():
@@ -170,6 +180,21 @@ def register_routes(app: Flask):
             
         except Exception as e:
             logger.error(f"Error updating intelligence: {str(e)}")
+            db.session.rollback()
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/intelligence/<int:intelligence_id>', methods=['DELETE'])
+    def delete_intelligence(intelligence_id):
+        """删除情报（仅管理员）"""
+        if not _require_admin():
+            return jsonify({'error': 'Admin token required'}), 403
+        try:
+            intelligence = Intelligence.query.get_or_404(intelligence_id)
+            db.session.delete(intelligence)
+            db.session.commit()
+            return jsonify({'status': 'ok', 'deleted_id': intelligence_id}), 200
+        except Exception as e:
+            logger.error(f"Error deleting intelligence: {str(e)}")
             db.session.rollback()
             return jsonify({'error': str(e)}), 500
     

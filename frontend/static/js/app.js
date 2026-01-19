@@ -9,12 +9,14 @@ let currentTab = 'all';
 let autoScrollEnabled = true;
 let displayedCount = 20;
 let tickerInterval = null;
+let adminToken = localStorage.getItem('ADMIN_TOKEN') || '';
 
 // 页面加载时初始化
 document.addEventListener('DOMContentLoaded', function() {
     loadIntelligence();
     setupFormSubmit();
     initTicker();
+    updateAdminUI();
     
     // 自动刷新（每30秒）
     setInterval(loadIntelligence, 30000);
@@ -153,9 +155,77 @@ function createIntelligenceCard(item) {
                 <button class="btn btn-secondary btn-sm" onclick="classifyIntelligence(${item.id})">
                     <i class="fas fa-star"></i> 分级
                 </button>
+                ${adminToken ? `
+                <button class="btn btn-danger btn-sm" onclick="deleteIntelligence(${item.id})">
+                    <i class="fas fa-trash"></i> 删除
+                </button>
+                ` : ''}
             </div>
         </div>
     `;
+}
+
+// 管理员：登录/退出
+function toggleAdmin() {
+    if (adminToken) {
+        if (!confirm('确定要退出管理员模式吗？')) return;
+        adminToken = '';
+        localStorage.removeItem('ADMIN_TOKEN');
+        showNotification('已退出管理员模式', 'info');
+        updateAdminUI();
+        filterIntelligence();
+        return;
+    }
+
+    const token = prompt('请输入管理员 Token（用于删除等敏感操作）：');
+    if (!token) return;
+    adminToken = token.trim();
+    localStorage.setItem('ADMIN_TOKEN', adminToken);
+    showNotification('已进入管理员模式', 'success');
+    updateAdminUI();
+    filterIntelligence();
+}
+
+function updateAdminUI() {
+    const btn = document.getElementById('adminBtn');
+    if (!btn) return;
+    btn.classList.toggle('active', !!adminToken);
+    btn.title = adminToken ? '管理员：已登录（点击退出）' : '管理员：登录';
+}
+
+// 删除情报（仅管理员）
+async function deleteIntelligence(id) {
+    if (!adminToken) {
+        showNotification('需要管理员Token才能删除', 'error');
+        return;
+    }
+    if (!confirm('确定要删除这条情报吗？此操作不可恢复。')) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/intelligence/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-Admin-Token': adminToken
+            }
+        });
+
+        if (response.ok) {
+            showNotification('删除成功', 'success');
+            allIntelligence = allIntelligence.filter(item => item.id !== id);
+            updateStatistics();
+            filterIntelligence();
+        } else {
+            let errMsg = '删除失败';
+            try {
+                const err = await response.json();
+                errMsg = err.error || errMsg;
+            } catch (_) {}
+            showNotification(errMsg, 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting:', error);
+        showNotification('网络错误', 'error');
+    }
 }
 
 // 更新统计信息
