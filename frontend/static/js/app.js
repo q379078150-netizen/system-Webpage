@@ -9,7 +9,8 @@ let currentTab = 'all';
 let autoScrollEnabled = true;
 let displayedCount = 20;
 let tickerInterval = null;
-let adminToken = localStorage.getItem('ADMIN_TOKEN') || '';
+// 默认令牌改为 'admin'，便于与后端默认值一致（生产环境仍应改为强随机值）
+let adminToken = localStorage.getItem('ADMIN_TOKEN') || 'admin';
 // 展示用时区，确保时间显示与本地一致（中国大陆用 Asia/Shanghai）
 const DISPLAY_TIME_ZONE = 'Asia/Shanghai';
 

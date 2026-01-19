@@ -92,6 +92,8 @@ def register_routes(app: Flask):
     @app.route('/api/intelligence', methods=['POST'])
     def create_intelligence():
         """创建新情报"""
+        if not _require_admin():
+            return jsonify({'error': 'Admin token required'}), 403
         try:
             data = request.get_json()
             
@@ -158,6 +160,8 @@ def register_routes(app: Flask):
     @app.route('/api/intelligence/<int:intelligence_id>', methods=['PUT'])
     def update_intelligence(intelligence_id):
         """更新情报"""
+        if not _require_admin():
+            return jsonify({'error': 'Admin token required'}), 403
         try:
             intelligence = Intelligence.query.get_or_404(intelligence_id)
             data = request.get_json()
@@ -201,6 +205,8 @@ def register_routes(app: Flask):
     @app.route('/api/intelligence/<int:intelligence_id>/classify', methods=['POST'])
     def classify_intelligence(intelligence_id):
         """手动分级情报"""
+        if not _require_admin():
+            return jsonify({'error': 'Admin token required'}), 403
         try:
             intelligence = Intelligence.query.get_or_404(intelligence_id)
             data = request.get_json()
@@ -229,6 +235,8 @@ def register_routes(app: Flask):
     @app.route('/api/push/<int:intelligence_id>', methods=['POST'])
     def push_intelligence(intelligence_id):
         """手动触发推送"""
+        if not _require_admin():
+            return jsonify({'error': 'Admin token required'}), 403
         try:
             intelligence = Intelligence.query.get_or_404(intelligence_id)
             publisher = RealTimePublisher(app)

@@ -45,5 +45,5 @@ class Config:
     LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
 
     # 管理员操作（用于删除等敏感操作）
-    # 建议在 .env 中配置一个强随机值，例如：ADMIN_TOKEN=your-long-random-token
-    ADMIN_TOKEN = os.environ.get('ADMIN_TOKEN', '')
+    # 需设置 ADMIN_TOKEN；未设置时默认使用 'admin'（请尽快在生产环境改成强随机值）
+    ADMIN_TOKEN = os.environ.get('ADMIN_TOKEN', 'admin')
