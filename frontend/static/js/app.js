@@ -10,6 +10,8 @@ let autoScrollEnabled = true;
 let displayedCount = 20;
 let tickerInterval = null;
 let adminToken = localStorage.getItem('ADMIN_TOKEN') || '';
+// 展示用时区，确保时间显示与本地一致（中国大陆用 Asia/Shanghai）
+const DISPLAY_TIME_ZONE = 'Asia/Shanghai';
 
 function getAuthHeaders() {
     const headers = { 'Content-Type': 'application/json' };
@@ -644,7 +646,7 @@ function isNew(dateString) {
 function formatDateTime(dateString) {
     if (!dateString) return '未知';
     const date = new Date(dateString);
-    return date.toLocaleString('zh-CN', { hour12: false });
+    return date.toLocaleString('zh-CN', { hour12: false, timeZone: DISPLAY_TIME_ZONE });
 }
 // 更新主要文章
 function updateFeaturedArticle(intelligenceList) {
