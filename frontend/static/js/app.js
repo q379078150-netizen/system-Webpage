@@ -700,6 +700,7 @@ function updateLatestNews(intelligenceList) {
     
     newsList.innerHTML = latest.map(item => {
         const timeAgo = getTimeAgo(item.created_at);
+        const localTime = formatDateTime(item.created_at);
         const rating = item.rating || 0;
         const tags = [];
         if (rating >= 4) tags.push(`<span class="news-tag">高价值</span>`);
@@ -707,10 +708,13 @@ function updateLatestNews(intelligenceList) {
         
         return `
             <div class="news-item" onclick="viewIntelligence(${item.id})">
-                <div class="news-item-title">${escapeHtml(item.title)}</div>
+                <div class="news-item-header">
+                    <div class="news-item-title">${escapeHtml(item.title)}</div>
+                    <span class="news-rating-chip">${rating}★</span>
+                </div>
                 <div class="news-item-meta">
-                    <span><i class="fas fa-clock"></i> ${timeAgo}</span>
-                    <span><i class="fas fa-star"></i> ${rating}星</span>
+                    <span class="news-time"><i class="fas fa-clock"></i> ${timeAgo}</span>
+                    <span class="news-time-local"><i class="fas fa-calendar-alt"></i> ${localTime}</span>
                 </div>
                 ${tags.length > 0 ? `<div class="news-item-tags">${tags.join('')}</div>` : ''}
             </div>
@@ -755,10 +759,11 @@ function updateRightNewsList(newsItems) {
     
     rightNewsList.innerHTML = newsItems.map(item => {
         const timeAgo = getTimeAgo(item.created_at);
+        const localTime = formatDateTime(item.created_at);
         return `
             <div class="news-item-compact" onclick="viewIntelligence(${item.id})">
                 <div class="news-item-compact-title">${escapeHtml(item.title.substring(0, 50))}${item.title.length > 50 ? '...' : ''}</div>
-                <div class="news-item-compact-time">${timeAgo}</div>
+                <div class="news-item-compact-time">${timeAgo} · ${localTime}</div>
             </div>
         `;
     }).join('');
